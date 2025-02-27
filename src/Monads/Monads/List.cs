@@ -23,5 +23,5 @@ public partial class List<T>(IEnumerable<T> items) : IEnumerable<T>, IMonad<T>
         new([value]);
 
     public override string ToString() =>
-           "[" + string.Join(", ", _items) + "]";
+       "[" + string.Join(", ", _items) + "]";
 }
