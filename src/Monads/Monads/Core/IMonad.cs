@@ -1,3 +1,3 @@
-﻿namespace Monads.Core;
+﻿namespace Monads;
 
 public interface IMonad<T>;
