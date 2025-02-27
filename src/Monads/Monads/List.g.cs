@@ -31,6 +31,12 @@ public abstract class ListMonadAwaiter : INotifyCompletion
         }
     }
 
+    public bool IsCompleted
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => false;
+    }
+
     public abstract List<TMap> Bind<TMap>(Func<object, List<TMap>> map);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,11 +47,6 @@ public abstract class ListMonadAwaiter : INotifyCompletion
 // TODO: Auto-generate.
 public class ListMonadAwaiter<T>(List<T> container) : ListMonadAwaiter
 {
-    public bool IsCompleted
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] get => false;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetResult() =>
         (T) Result;

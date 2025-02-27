@@ -31,6 +31,12 @@ public abstract class ResultMonadAwaiter : INotifyCompletion
         }
     }
 
+    public bool IsCompleted
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => false;
+    }
+
     public abstract Result<TMap> Bind<TMap>(Func<object, Result<TMap>> map);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,11 +47,6 @@ public abstract class ResultMonadAwaiter : INotifyCompletion
 // TODO: Auto-generate.
 public class ResultMonadAwaiter<T>(Result<T> container) : ResultMonadAwaiter
 {
-    public bool IsCompleted
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] get => false;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetResult() =>
         (T) Result;
