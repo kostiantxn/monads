@@ -27,7 +27,7 @@ Monads.Result<int> Divide(int x, int y) =>
 
 async Monads.Result<int> Do(string a, string b)
 {
-    // This code will try to parse the parameter `b` and, if successful,
+    // This code will try to parse the parameter `a` and, if successful,
     // unwrap the parsed value into the local variable `x`. Otherwise,
     // the execution will stop, and the error will be returned to the caller
     // in an erroneous result.
