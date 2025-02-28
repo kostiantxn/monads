@@ -15,7 +15,7 @@ async Monads.Maybe<int> Maybe()
     // The method will immediately return `Nothing` to the caller.
     Console.WriteLine(await Monads.Maybe.Nothing<string>());
 
-    // This lin will never be reached because of the line above.
+    // This line will never be reached because of the line above.
     return 0xDEAD;
 }
 
