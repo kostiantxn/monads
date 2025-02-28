@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Monads.Generators\Monads.Generators\Monads.Generators.csproj"
+      <ProjectReference Include="..\Monads.Generators\Monads.Generators.csproj"
                         OutputItemType="Analyzer" 
                         ReferenceOutputAssembly="false" />
     </ItemGroup>
