@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -5,21 +7,38 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Monads.Generators;
 
+/// <summary>
+///     An incremental source generator that collects all types that implement
+///     the <c>IMonad&lt;T&gt;</c> interface to generate a custom
+///     <c>AsyncMethodBuilder</c> type and the <c>GetAwaiter</c> method for them.
+/// </summary>
 [Generator]
 public class MonadGenerator : IIncrementalGenerator
 {
+    private const string Monad = "Monads.IMonad<T>";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var provider = context.SyntaxProvider
             .CreateSyntaxProvider(
                 (x, _) => x is TypeDeclarationSyntax { BaseList.Types.Count: > 0 },
-                (x, _) => (Node: (TypeDeclarationSyntax) x.Node, Symbol: x.SemanticModel.GetDeclaredSymbol(x.Node) as INamedTypeSymbol))
-            .Where(x => x.Symbol is not null && x.Symbol.AllInterfaces.Any(y => y.OriginalDefinition.ToString() is "Monads.IMonad<T>"));
+                (x, _) => x.SemanticModel.GetDeclaredSymbol(x.Node) as INamedTypeSymbol)
+            .Where(x => x is not null && x.AllInterfaces.Any(y => y.OriginalDefinition.ToString() is Monad))
+            .Collect();
 
-        context.RegisterSourceOutput(provider, (cx, x) => Generate(cx, x.Node, x.Symbol!));
+        context.RegisterSourceOutput(provider, Generate!);
     }
 
-    private static void Generate(SourceProductionContext cx, TypeDeclarationSyntax node, INamedTypeSymbol symbol)
+    private static void Generate(SourceProductionContext cx, ImmutableArray<INamedTypeSymbol> symbols)
+    {
+        var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+
+        foreach (var symbol in symbols)
+            if (processed.Add(symbol))
+                Generate(cx, symbol);
+    }
+
+    private static void Generate(SourceProductionContext cx, INamedTypeSymbol symbol)
     {
         var definition = new StringBuilder();
 
@@ -76,7 +95,7 @@ public class MonadGenerator : IIncrementalGenerator
                     get => false;
                 }
 
-                public abstract {{symbol.Name}}<TMap> Bind<TMap>(Func<object, {{symbol.Name}}<TMap>> map);
+                public abstract {{symbol.Name}}<U> Bind<U>(Func<object, {{symbol.Name}}<U>> map);
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void OnCompleted(Action continuation) =>
@@ -89,7 +108,7 @@ public class MonadGenerator : IIncrementalGenerator
                 public T GetResult() =>
                     (T) Result;
 
-                public override {{symbol.Name}}<TMap> Bind<TMap>(Func<object, {{symbol.Name}}<TMap>> map) =>
+                public override {{symbol.Name}}<U> Bind<U>(Func<object, {{symbol.Name}}<U>> map) =>
                     container.Bind((T x) => map(x!));
             }
 
