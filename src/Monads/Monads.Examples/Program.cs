@@ -14,6 +14,9 @@ Console.WriteLine();
 Console.WriteLine(Injection().Run(new Configuration(value: "1984")));
 Console.WriteLine();
 Console.WriteLine(Computation());
+Console.WriteLine();
+Console.WriteLine(State().Run(0));
+Console.WriteLine(State().Run(7));
 
 async Monads.Maybe<int> Maybe()
 {
@@ -111,6 +114,22 @@ async History.Writer<int> Computation()
     return a - b;
 }
 
+[AsyncMethodBuilder(typeof(Machine.StateMonadMethodBuilder<>))]
+async Machine.State<string> State()
+{
+    var state = await Machine.State.Get();
+    if (state.Value is 0)
+    {
+        await Machine.State.Put(+1);
+        return "0 is the initial state!";
+    }
+    else
+    {
+        await Machine.State.Put(-1);
+        return $"idk what {state.Value} is";
+    }
+}
+
 public partial class Configuration(string value)
     : Monads.Environment<Configuration>
 {
@@ -133,4 +152,16 @@ public partial class History(IEnumerable<string> items)
 
     public static implicit operator History(string item) =>
         new([item]);
+}
+
+public partial class Machine
+    : Monads.Given<Machine>
+{
+    public int Value { get; init; }
+
+    public override string ToString() =>
+        $"Machine {{ Value = {Value} }}";
+
+    public static implicit operator Machine(int value) =>
+        new() { Value = value };
 }
