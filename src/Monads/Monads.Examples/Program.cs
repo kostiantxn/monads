@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Unit = System.ValueTuple;
 
 Console.WriteLine(Maybe());
 Console.WriteLine();
@@ -17,6 +18,9 @@ Console.WriteLine(Computation());
 Console.WriteLine();
 Console.WriteLine(State().Run(0));
 Console.WriteLine(State().Run(7));
+Console.WriteLine();
+
+Main().Run();
 
 async Monads.Maybe<int> Maybe()
 {
@@ -128,6 +132,17 @@ async Machine.State<string> State()
         await Machine.State.Put(-1);
         return $"idk what {state.Value} is";
     }
+}
+
+async Monads.IO<Unit> Main()
+{
+    await Monads.IO.Console.Write("Your name: ");
+
+    var name = await Monads.IO.Console.ReadLine();
+
+    await Monads.IO.Console.WriteLine($"Hello, {name}");
+
+    return default;
 }
 
 public partial class Configuration(string value)

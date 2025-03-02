@@ -138,7 +138,7 @@ public class MonadGenerator : IIncrementalGenerator
         return
             // lang=C#
             $$"""
-            public class {{type.Name}}MonadMethodBuilder<T>
+            public partial class {{type.Name}}MonadMethodBuilder<T>
             {
                 public static {{type.Name}}MonadMethodBuilder<T> Create() =>
                     new();
