@@ -20,7 +20,7 @@ Console.WriteLine(State().Run(0));
 Console.WriteLine(State().Run(7));
 Console.WriteLine();
 
-Main().Run();
+_ = Main().Run();
 
 async Monads.Maybe<int> Maybe()
 {
