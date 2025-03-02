@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Monads.Generators.Constants;
+using Monads.Generators.Extensions;
 
 namespace Monads.Generators;
 
@@ -15,63 +16,81 @@ namespace Monads.Generators;
 [Generator]
 public class MonadGenerator : IIncrementalGenerator
 {
-    private const string Monad = "Monads.IMonad<T>";
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var provider = context.SyntaxProvider
             .CreateSyntaxProvider(
                 (x, _) => x is TypeDeclarationSyntax { BaseList.Types.Count: > 0 },
                 (x, _) => x.SemanticModel.GetDeclaredSymbol(x.Node) as INamedTypeSymbol)
-            .Where(x => x is not null && x.AllInterfaces.Any(y => y.OriginalDefinition.ToString() is Monad))
+            .Where(x => x?.TypeParameters.Length is 1 && x.OriginalDefinition.Implements(Types.IMonad))
             .Collect();
 
         context.RegisterSourceOutput(provider, Generate!);
     }
 
-    private static void Generate(SourceProductionContext cx, ImmutableArray<INamedTypeSymbol> symbols)
+    private static void Generate(SourceProductionContext cx, ImmutableArray<INamedTypeSymbol> types)
     {
         var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
 
-        foreach (var symbol in symbols)
-            if (processed.Add(symbol))
-                Generate(cx, symbol);
+        foreach (var type in types)
+            if (processed.Add(type))
+                Generate(cx, type);
     }
 
-    private static void Generate(SourceProductionContext cx, INamedTypeSymbol symbol)
+    private static void Generate(SourceProductionContext cx, INamedTypeSymbol type)
     {
-        var definition = new StringBuilder();
+        var contents = new StringBuilder();
 
-        if (symbol.IsReadOnly)
-            definition.Append("readonly ");
+        contents
+            .AppendLine( 
+                // lang=C#
+                $$"""
+                [AsyncMethodBuilder(typeof({{type.Name}}MonadMethodBuilder<>))]
+                {{type.Definition()}}
+                {
+                    public {{type.Name}}MonadAwaiter<{{type.TypeParameters[0].Name}}> GetAwaiter() =>
+                        new(this);
+                }
 
-        definition.Append("partial ");
+                """)
+            .AppendLine(MonadAwaiter(type))
+            .AppendLine()
+            .Append(MonadMethodBuilder(type));
 
-        if (symbol.IsRecord)
-            definition.Append("record ");
+        var source = new StringBuilder();
 
-        if (symbol.IsValueType)
-            definition.Append("struct");
-        else
-            definition.Append("class");
+        if (!type.ContainingNamespace.IsGlobalNamespace)
+        {
+            source.AppendLine(
+                // lang=C#
+                $$"""
+                namespace {{type.ContainingNamespace.Name}};
 
-        var source =
+                """);
+        }
+
+        source
+            .AppendLine(
+                // lang=C#
+                """
+                using System.Reflection;
+                using System.Runtime.CompilerServices;
+                using System.Security;
+
+                #nullable disable
+
+                """)
+            .AppendContainingType(type.ContainingType, contents.ToString());
+
+        cx.AddSource(type.Name, source.ToString());
+    }
+
+    private static string MonadAwaiter(INamedTypeSymbol type)
+    {
+        return
             // lang=C#
             $$"""
-            using System.Reflection;
-            using System.Runtime.CompilerServices;
-            using System.Security;
-
-            #nullable disable
-
-            [AsyncMethodBuilder(typeof({{symbol.Name}}MonadMethodBuilder<>))]
-            {{definition}} {{symbol.Name}}<T>
-            {
-                public {{symbol.Name}}MonadAwaiter<T> GetAwaiter() =>
-                    new(this);
-            }
-
-            public abstract class {{symbol.Name}}MonadAwaiter : INotifyCompletion
+            public abstract class {{type.Name}}MonadAwaiter : INotifyCompletion
             {
                 private bool _set;
                 private object _value;
@@ -95,39 +114,46 @@ public class MonadGenerator : IIncrementalGenerator
                     get => false;
                 }
 
-                public abstract {{symbol.Name}}<U> Bind<U>(Func<object, {{symbol.Name}}<U>> map);
+                public abstract {{type.Name}}<U> Bind<U>(Func<object, {{type.Name}}<U>> map);
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void OnCompleted(Action continuation) =>
                     throw new NotSupportedException("`OnCompleted` must not be called");
             }
 
-            public class {{symbol.Name}}MonadAwaiter<T>({{symbol.Name}}<T> container) : {{symbol.Name}}MonadAwaiter
+            public class {{type.Name}}MonadAwaiter<T>({{type.Name}}<T> container) : {{type.Name}}MonadAwaiter
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public T GetResult() =>
                     (T) Result;
 
-                public override {{symbol.Name}}<U> Bind<U>(Func<object, {{symbol.Name}}<U>> map) =>
+                public override {{type.Name}}<U> Bind<U>(Func<object, {{type.Name}}<U>> map) =>
                     container.Bind((T x) => map(x!));
             }
+            """;
+    }
 
-            public class {{symbol.Name}}MonadMethodBuilder<T>
+    private static string MonadMethodBuilder(INamedTypeSymbol type)
+    {
+        return
+            // lang=C#
+            $$"""
+            public class {{type.Name}}MonadMethodBuilder<T>
             {
-                public static {{symbol.Name}}MonadMethodBuilder<T> Create() =>
+                public static {{type.Name}}MonadMethodBuilder<T> Create() =>
                     new();
 
                 public void SetResult(T result) =>
-                    Task = {{symbol.Name}}<T>.Return(result);
+                    Task = {{type.Name}}<T>.Return(result);
 
-                public {{symbol.Name}}<T> Task { get; protected set; } = default!;
+                public {{type.Name}}<T> Task { get; protected set; } = default!;
 
                 public void Start<TStateMachine>(ref TStateMachine stateMachine)
                     where TStateMachine : IAsyncStateMachine =>
                     stateMachine.MoveNext();
 
                 public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
-                    where TAwaiter : {{symbol.Name}}MonadAwaiter, INotifyCompletion
+                    where TAwaiter : {{type.Name}}MonadAwaiter, INotifyCompletion
                     where TStateMachine : IAsyncStateMachine
                 {
                     var capturedAwaiter = awaiter;
@@ -163,7 +189,7 @@ public class MonadGenerator : IIncrementalGenerator
 
                 [SecuritySafeCritical]
                 public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
-                    where TAwaiter : {{symbol.Name}}MonadAwaiter, ICriticalNotifyCompletion
+                    where TAwaiter : {{type.Name}}MonadAwaiter, ICriticalNotifyCompletion
                     where TStateMachine : IAsyncStateMachine =>
                     throw new NotSupportedException("`AwaitUnsafeOnCompleted` is not supported");
 
@@ -202,18 +228,5 @@ public class MonadGenerator : IIncrementalGenerator
                 }
             }
             """;
-
-        if (!symbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            source =
-                $$"""
-                namespace {{symbol.ContainingNamespace.Name}};
-                
-                
-                """
-                + source;
-        }
-
-        cx.AddSource(symbol.Name, source);
     }
 }

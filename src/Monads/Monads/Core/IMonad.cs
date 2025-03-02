@@ -90,3 +90,5 @@ public interface IMonad<T>
         public static class Return;
     }
 }
+
+public interface ICapture;

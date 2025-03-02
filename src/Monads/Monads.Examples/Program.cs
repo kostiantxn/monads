@@ -1,10 +1,20 @@
-﻿Console.WriteLine(Maybe());
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
+
+Console.WriteLine(Maybe());
 Console.WriteLine();
-Console.WriteLine(Do("1", "a"));
+Console.WriteLine(Do("x", "y"));
+Console.WriteLine(Do("5", "y"));
+Console.WriteLine(Do("5", "0"));
+Console.WriteLine(Do("5", "2"));
 Console.WriteLine();
 Console.WriteLine(Triples(3));
 Console.WriteLine();
-Console.WriteLine(Product(3));
+Console.WriteLine(Product(5));
+Console.WriteLine();
+Console.WriteLine(Injection().Run(new Configuration(value: "1984")));
+Console.WriteLine();
+Console.WriteLine(Computation());
 
 async Monads.Maybe<int> Maybe()
 {
@@ -73,4 +83,55 @@ async Monads.List<int> Product(int limit)
     return
         await Monads.List.From(Enumerable.Range(1, limit)) *
         await Monads.List.From(-1, +1);
+}
+
+// Unfortunately, C# doesn't allow `AsyncMethodBuilder`s to have more than
+// 1 generic parameter, so we have to add the attribute to each method
+// individually in order to capture the extra generic parameters.
+//
+// For example, here, instead of writing `Reader<Configuration, int>`,
+// we have to "capture" the `Configuration` and then mark the method with
+// `Configuration.ReaderMonadMethodBuilder<>`, which only has 1 generic
+// parameter.
+[AsyncMethodBuilder(typeof(Configuration.ReaderMonadMethodBuilder<>))]
+async Configuration.Reader<int> Injection()
+{
+    var configuration = await Configuration.Reader.Ask();
+
+    return int.Parse(configuration.Value);
+}
+
+[AsyncMethodBuilder(typeof(History.WriterMonadMethodBuilder<>))]
+async History.Writer<int> Computation()
+{
+    await History.Writer.Tell("subtracting numbers");
+
+    var a = await History.Writer.Tells(3, "got number 3");
+    var b = await History.Writer.Tells(5, "got number 5");
+
+    return a - b;
+}
+
+public partial class Configuration(string value)
+    : Monads.Environment<Configuration>
+{
+    public string Value { get; } = value;
+}
+
+public partial class History(IEnumerable<string> items)
+    : Monads.Log<History>, IAdditionOperators<History, History, History>, IAdditiveIdentity<History, History>
+{
+    public IReadOnlyList<string> Items { get; } = items.ToList();
+
+    public override string ToString() =>
+        "History [" + string.Join(", ", items.Select(x => '"' + x + '"')) + "]";
+
+    public static History AdditiveIdentity =>
+        new([]);
+
+    public static History operator +(History left, History right) =>
+        new(left.Items.Concat(right.Items));
+
+    public static implicit operator History(string item) =>
+        new([item]);
 }
