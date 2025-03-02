@@ -13,7 +13,7 @@ namespace Monads;
 ///     The type <typeparamref name="W"/> must form a monoid.
 /// </remarks>
 public partial class Log<W> : ICapture
-    where W : IAdditionOperators<W, W, W>, IAdditiveIdentity<W, W>
+    where W : IMonoid<W>
 {
     /// <summary>
     ///     A computation that maintains a log.

@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 Console.WriteLine(Maybe());
 Console.WriteLine();
@@ -119,7 +118,7 @@ public partial class Configuration(string value)
 }
 
 public partial class History(IEnumerable<string> items)
-    : Monads.Log<History>, IAdditionOperators<History, History, History>, IAdditiveIdentity<History, History>
+    : Monads.Log<History>, Monads.IMonoid<History>
 {
     public IReadOnlyList<string> Items { get; } = items.ToList();
 
