@@ -77,7 +77,7 @@ public partial class Log<W> : ICapture
         /// <param name="value">The value.</param>
         /// <param name="log">The log.</param>
         /// <returns>The constructed <see cref="Writer{T}"/>.</returns>
-        public static Writer<T> Tells<T>(T value, W log) =>
+        public static Writer<T> Tell<T>(T value, W log) =>
             new(value, log);
     }
 }

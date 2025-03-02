@@ -82,6 +82,15 @@ public abstract partial class Given<S> : ICapture
             new(_ => (default, state));
 
         /// <summary>
+        ///     Constructs a <see cref="State{T}"/> that applies the specified
+        ///     function to modify the internal state.
+        /// </summary>
+        /// <param name="map">The function to apply to the internal state.</param>
+        /// <returns>The constructed <see cref="State{T}"/>.</returns>
+        public static State<Unit> Put(Func<S, S> map) =>
+            new(x => (default, map(x)));
+
+        /// <summary>
         ///     Constructs a <see cref="State{T}"/> that returns
         ///     the internal state.
         /// </summary>
@@ -96,7 +105,7 @@ public abstract partial class Given<S> : ICapture
         /// <param name="map">The function to apply to the internal state.</param>
         /// <typeparam name="T">The function output type.</typeparam>
         /// <returns>The constructed <see cref="State{T}"/>.</returns>
-        public static State<T> Gets<T>(Func<S, T> map) =>
+        public static State<T> Get<T>(Func<S, T> map) =>
             new(x => (map(x), x));
     }
 }

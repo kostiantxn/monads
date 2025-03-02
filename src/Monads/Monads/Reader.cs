@@ -27,8 +27,12 @@ public abstract partial class Environment<E> : ICapture
         ///     Modifies the environment.
         /// </summary>
         /// <param name="map">The function that modifies the environment.</param>
-        /// <typeparam name="F">The type of the modified environment.</typeparam>
         /// <returns>A <see cref="Reader{T}"/> that reads from the modified environment.</returns>
+        public Reader<T> With(Func<E, E> map) =>
+            new(x => Run(map(x)));
+
+        /// <inheritdoc cref="With(Func{E, E})"/>
+        /// <typeparam name="F">The type of the modified environment.</typeparam>
         public Environment<F>.Reader<T> With<F>(Func<F, E> map) =>
             new(x => Run(map(x)));
 
@@ -68,7 +72,7 @@ public abstract partial class Environment<E> : ICapture
         /// <param name="run">The function to apply to the environment.</param>
         /// <typeparam name="T">The function output type.</typeparam>
         /// <returns>The constructed <see cref="Reader{T}"/>.</returns>
-        public static Reader<T> Asks<T>(Func<E, T> run) =>
+        public static Reader<T> Ask<T>(Func<E, T> run) =>
             new(run);
     }
 }

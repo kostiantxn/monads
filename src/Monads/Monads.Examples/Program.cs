@@ -103,8 +103,8 @@ async History.Writer<int> Writer()
 {
     await History.Writer.Tell("subtracting numbers");
 
-    var a = await History.Writer.Tells(3, "got number 3");
-    var b = await History.Writer.Tells(5, "got number 5");
+    var a = await History.Writer.Tell(3, "got number 3");
+    var b = await History.Writer.Tell(5, "got number 5");
 
     return a - b;
 }
