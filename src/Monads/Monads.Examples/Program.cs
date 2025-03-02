@@ -3,18 +3,16 @@ using Unit = System.ValueTuple;
 
 Console.WriteLine(Maybe());
 Console.WriteLine();
-Console.WriteLine(Do("x", "y"));
-Console.WriteLine(Do("5", "y"));
-Console.WriteLine(Do("5", "0"));
-Console.WriteLine(Do("5", "2"));
+Console.WriteLine(Result("x", "y"));
+Console.WriteLine(Result("5", "y"));
+Console.WriteLine(Result("5", "0"));
+Console.WriteLine(Result("5", "2"));
 Console.WriteLine();
-Console.WriteLine(Triples(3));
+Console.WriteLine(List(3));
 Console.WriteLine();
-Console.WriteLine(Product(5));
+Console.WriteLine(Reader().Run(new Configuration { Value = "1984" }));
 Console.WriteLine();
-Console.WriteLine(Injection().Run(new Configuration(value: "1984")));
-Console.WriteLine();
-Console.WriteLine(Computation());
+Console.WriteLine(Writer());
 Console.WriteLine();
 Console.WriteLine(State().Run(0));
 Console.WriteLine(State().Run(7));
@@ -41,7 +39,7 @@ Monads.Result<T> Parse<T>(string input) where T : IParsable<T> =>
 Monads.Result<int> Divide(int x, int y) =>
     Monads.Result.Try(() => x / y);
 
-async Monads.Result<int> Do(string a, string b)
+async Monads.Result<int> Result(string a, string b)
 {
     // This code will try to parse the parameter `a` and, if successful,
     // unwrap the parsed value into the local variable `x`. Otherwise,
@@ -63,7 +61,7 @@ async Monads.Result<int> Do(string a, string b)
     return await Divide(x, y);
 }
 
-async Monads.List<(int, int, int)> Triples(int limit)
+async Monads.List<(int, int, int)> List(int limit)
 {
     // The variable `n` will loop through values 1 to `limit`, and for each
     // value, the rest of the method will be executed.
@@ -84,13 +82,6 @@ async Monads.List<(int, int, int)> Triples(int limit)
     return (m*m - n*n, 2*m*n, m*m + n*n);
 }
 
-async Monads.List<int> Product(int limit)
-{
-    return
-        await Monads.List.From(Enumerable.Range(1, limit)) *
-        await Monads.List.From(-1, +1);
-}
-
 // Unfortunately, C# doesn't allow `AsyncMethodBuilder`s to have more than
 // 1 generic parameter, so we have to add the attribute to each method
 // individually in order to capture the extra generic parameters.
@@ -100,7 +91,7 @@ async Monads.List<int> Product(int limit)
 // `Configuration.ReaderMonadMethodBuilder<>`, which only has 1 generic
 // parameter.
 [AsyncMethodBuilder(typeof(Configuration.ReaderMonadMethodBuilder<>))]
-async Configuration.Reader<int> Injection()
+async Configuration.Reader<int> Reader()
 {
     var configuration = await Configuration.Reader.Ask();
 
@@ -108,7 +99,7 @@ async Configuration.Reader<int> Injection()
 }
 
 [AsyncMethodBuilder(typeof(History.WriterMonadMethodBuilder<>))]
-async History.Writer<int> Computation()
+async History.Writer<int> Writer()
 {
     await History.Writer.Tell("subtracting numbers");
 
@@ -145,10 +136,10 @@ async Monads.IO<Unit> Main()
     return default;
 }
 
-public partial class Configuration(string value)
+public partial class Configuration
     : Monads.Environment<Configuration>
 {
-    public string Value { get; } = value;
+    public required string Value { get; init; }
 }
 
 public partial class History(IEnumerable<string> items)
