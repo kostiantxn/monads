@@ -48,6 +48,10 @@ public abstract partial class Given<S> : ICapture
         /// <returns>The modified <see cref="State{T}"/>.</returns>
         public State<T> With(Func<S, S> map) =>
             new(x => Run(map(x)));
+
+        /// <inheritdoc/>
+        public override string ToString() =>
+            $"State {typeof(S).Name} {typeof(T).Name}";
     }
 
     // Pretending that C# supports type class instances. T_T

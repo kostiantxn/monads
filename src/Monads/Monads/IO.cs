@@ -23,6 +23,10 @@ public partial class IO<T>(Func<IO.World, (T Value, IO.World World)> run)
     /// <param name="world">The real world to run the computation in.</param>
     public (T Value, IO.World World) Run(IO.World world) =>
         run(world);
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"IO {typeof(T).Name}";
 }
 
 // Pretending that C# supports type class instances. T_T
