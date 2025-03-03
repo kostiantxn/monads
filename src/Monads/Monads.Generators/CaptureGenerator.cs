@@ -14,7 +14,7 @@ namespace Monads.Generators;
 ///     captured <c>AsyncMethodBuilder</c> types for them.
 /// </summary>
 [Generator]
-public class CapturedGenerator : IIncrementalGenerator
+public class CaptureGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monads.Examples", "Monads.E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monads.Generators", "Monads.Generators\Monads.Generators.csproj", "{7AA428F4-4A72-4230-9811-CAF8ADCC5CE9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monads.Tests", "Monads.Tests\Monads.Tests.csproj", "{04F4B3AE-5A55-4E95-889B-519EA2E6EFEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{7AA428F4-4A72-4230-9811-CAF8ADCC5CE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AA428F4-4A72-4230-9811-CAF8ADCC5CE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AA428F4-4A72-4230-9811-CAF8ADCC5CE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04F4B3AE-5A55-4E95-889B-519EA2E6EFEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04F4B3AE-5A55-4E95-889B-519EA2E6EFEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04F4B3AE-5A55-4E95-889B-519EA2E6EFEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04F4B3AE-5A55-4E95-889B-519EA2E6EFEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
