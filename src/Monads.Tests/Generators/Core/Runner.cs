@@ -28,8 +28,7 @@ internal static class Runner
         var errors = compilation.GetDiagnostics().RemoveAll(x => x.Severity is not DiagnosticSeverity.Error);
         if (errors.Any())
             throw new InvalidOperationException(
-                "Could not compile the provided source: \n" +
-                string.Join("\n", errors));
+                "Could not compile the provided source: \n" + string.Join("\n", errors));
 
         var driver = CSharpGeneratorDriver.Create(generators);
         var result = driver.RunGenerators(compilation);

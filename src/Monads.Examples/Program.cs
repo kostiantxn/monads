@@ -103,10 +103,25 @@ async History.Writer<int> Writer()
 {
     await History.Writer.Tell("subtracting numbers");
 
-    var a = await History.Writer.Tell(3, "got number 3");
-    var b = await History.Writer.Tell(5, "got number 5");
+    var a = await Parse("123");
+    var b = await Parse("abc", @default: 5);
 
     return a - b;
+
+    // ReSharper disable once VariableHidesOuterVariable
+    History.Writer<int> Parse(string input, int @default = default)
+    {
+        try
+        {
+            var number = int.Parse(input); 
+
+            return History.Writer.Tell(number, $"parsed number {number}");
+        }
+        catch
+        {
+            return History.Writer.Tell(@default, $"failed to parse '{input}'; returning {@default} instead");
+        }
+    }
 }
 
 [AsyncMethodBuilder(typeof(Machine.StateMonadMethodBuilder<>))]
