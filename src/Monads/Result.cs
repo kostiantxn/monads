@@ -76,9 +76,9 @@ public readonly partial record struct Result<T>
     public bool IsOk([NotNullWhen(true)] out T? value) =>
         IsOk(out value, out _);
 
-    /// <inheritdoc cref="IsOk(out T)"/>
+    /// <inheritdoc cref="IsOk()"/>
+    /// <param name="value">The computed value.</param>
     /// <param name="error">The computation error.</param>
-    // ReSharper disable once InvalidXmlDocComment
     public bool IsOk([NotNullWhen(true)] out T? value, [NotNullWhen(false)] out Exception? error)
     {
         value = _value!;

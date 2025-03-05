@@ -55,16 +55,9 @@ public readonly partial record struct Maybe<T>
     /// <param name="value">The contained value.</param>
     public bool IsJust([NotNullWhen(true)] out T? value)
     {
-        if (_just)
-        {
-            value = _value!;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
-        }
+        value = _value;
+
+        return _just;
     }
 
     /// <summary>
